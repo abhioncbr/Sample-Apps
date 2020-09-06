@@ -1,0 +1,13 @@
+# VERSION 0.1
+# AUTHOR: Abhishek Sharma<abhioncbr@yahoo.com>
+# DESCRIPTION: simple nodejs app for ssl based request.
+
+version: '3'
+services:
+  ssl-nodejs-app:
+    image: abhioncbr/ssl-nodejs-app:0.1
+    restart: always
+    ports:
+      - 15022:15022
+    volumes:
+      - ../certs/:/home/node/app/certs/
