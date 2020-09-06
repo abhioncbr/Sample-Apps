@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: sss-nodejs-app
+  name: ssl-nodejs-app-svc
+spec:
+  type: ClusterIP
+  ports:
+    - name: https
+      port: 15022
+      targetPort: 15022
+  selector:
+    app: sss-nodejs-app
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sss-nodejs-app
+spec:
+  selector:
+    matchLabels:
+      app: sss-nodejs-app
+  template:
+    metadata:
+      labels:
+        app: sss-nodejs-app
+    spec:
+      containers:
+        - name: controller
+          image: abhioncbr/ssl-nodejs-app:0.1
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 15022
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 15022
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 3
+          ports:
+          - name: https
+            containerPort: 15022
+            protocol: TCP
+          volumeMounts:
+            - name: certs
+              mountPath: /home/node/app/certs/
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 90Mi
+            limits:
+              cpu: 50m
+              memory: 90Mi
+      volumes:
+        - name: certs
+          secret:
+            secretName: ssl-certs
