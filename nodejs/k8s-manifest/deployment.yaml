@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: sss-nodejs-app
+    app: ssl-nodejs-app
   name: ssl-nodejs-app-svc
 spec:
   type: ClusterIP
@@ -11,20 +11,20 @@ spec:
       port: 15022
       targetPort: 15022
   selector:
-    app: sss-nodejs-app
+    app: ssl-nodejs-app
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sss-nodejs-app
+  name: ssl-nodejs-app
 spec:
   selector:
     matchLabels:
-      app: sss-nodejs-app
+      app: ssl-nodejs-app
   template:
     metadata:
       labels:
-        app: sss-nodejs-app
+        app: ssl-nodejs-app
     spec:
       containers:
         - name: controller
@@ -69,3 +69,26 @@ spec:
         - name: certs
           secret:
             secretName: ssl-certs
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    app: ssl-nodejs-app  
+  name: ssl-nodejs-app-ing
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+spec:
+  tls:
+  - hosts:
+    - ssl-exmple.kind-clstr.com
+  rules:
+  - host: ssl-exmple.kind-clstr.com
+    http:
+      paths:
+      - backend:
+          serviceName: ssl-nodejs-app-svc
+          servicePort: 15022
+        path: /            
