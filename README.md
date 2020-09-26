@@ -1,1 +1,1 @@
-# ssl-app
+# Sample Applications in different programming languages for testing and learning different functionalities
