@@ -5,26 +5,43 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httputil"
+	"rsc.io/quote"
 )
 
-func main() {
-	fmt.Print("Hello, it's there anybody in.")
-
-	helloHandler := func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode("Hello from Go app.")
+func logRequest(req *http.Request){
+	dump, err := httputil.DumpRequest(req, false)
+	if err != nil {
+		log.Fatal(err)
 	}
+	log.Printf("%q", dump)
+}
 
-	readyHandler := func(w http.ResponseWriter, r *http.Request) {
-		n, err := fmt.Fprintf(w, "Ready!")
+func helloHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		logRequest(r) // logging the request
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode("Hello from Go app.")
+		if err != nil {
+			log.Print("helloHandler, err: ", err)
+		}
+	})
+}
+
+func readyHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		logRequest(r) // logging the request
+		_, err := fmt.Fprintf(w, "Ready!")
 		if err != nil {
 			log.Print("readyHandler, err: ", err)
-		} else {
-			log.Print("readyHandler, response bytes: ", n)
 		}
-	}
+	})
+}
 
-	http.HandleFunc("/", helloHandler)
-	http.HandleFunc("/ready", readyHandler)
+
+func main() {
+	log.Print(quote.Hello())
+	http.Handle("/", helloHandler())
+	http.Handle("/ready", readyHandler())
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
